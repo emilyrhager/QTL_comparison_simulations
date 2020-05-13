@@ -1,0 +1,309 @@
+---
+title: "Compare QTL simulations 2019-12-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyr)
+library(ggplot2)
+setwd('/Volumes/hoekstra_lab/Users/hager/QTL/analysis')
+```
+
+
+```{r}
+d1.simsAT = read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_tail_dom_additive_window_0.1_total_var_const_all_sims.csv') 
+d1.simsAG = read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_tail_dom_additive_window_0.1_pergeno_var_const_all_sims.csv') 
+d1.simsET = read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_tail_dom_experiment_window_0.1_total_var_const_all_sims.csv') 
+d1.simsEG = read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_tail_dom_experiment_window_0.1_pergeno_var_const_all_sims.csv') 
+
+```
+
+First, for all the simulations, look at the distribution of lod scores by effect size. 
+
+
+```{r}
+lod.1 = 4.787525
+lod.window = 0.1
+ggplot(d1.simsAT,aes(x=lod,fill=sim.a))+
+  theme_classic()+
+  geom_rect(xmin = lod.1-lod.window,xmax = lod.1 + lod.window,ymin = -Inf, ymax = Inf,fill = 'lightgray')+
+  geom_histogram()+
+  facet_grid(.~sim.a)+
+  coord_flip()+
+  ggtitle('additive total')
+
+ggplot(d1.simsAG,aes(x=lod,fill=sim.a))+
+  theme_classic()+
+  geom_rect(xmin = lod.1-lod.window,xmax = lod.1 + lod.window,ymin = -Inf, ymax = Inf,fill = 'lightgray')+
+  geom_histogram()+
+  facet_grid(.~sim.a)+
+  coord_flip()+
+  ggtitle('additive pergeno')
+
+ggplot(d1.simsEG,aes(x=lod,fill=sim.a))+
+  theme_classic()+
+  geom_rect(xmin = lod.1-lod.window,xmax = lod.1 + lod.window,ymin = -Inf, ymax = Inf,fill = 'lightgray')+
+  geom_histogram()+
+  facet_grid(.~sim.a)+
+  coord_flip()+
+  ggtitle('experimental pergeno')
+
+ggplot(d1.simsET,aes(x=lod,fill=sim.a))+
+  theme_classic()+
+  geom_rect(xmin = lod.1-lod.window,xmax = lod.1 + lod.window,ymin = -Inf, ymax = Inf,fill = 'lightgray')+
+  geom_histogram()+
+  facet_grid(.~sim.a)+
+  coord_flip()+
+  ggtitle('experimental total')
+
+```
+
+If we plot these on the same axes, we see the expected pattern: 
+
+(1) Adding non-zero dominance increases the LOD scores for a given additive effect size a.
+
+(2) Keeping total, rather than per-genotype, variance constant increases the LOD scores for a given effect size a. 
+
+
+```{r}
+ggplot(d1.simsAT,aes(x=lod,fill=sim.a))+
+  theme_classic()+
+  geom_rect(xmin = lod.1-lod.window,xmax = lod.1 + lod.window,ymin = -Inf, ymax = Inf,fill = 'lightgray')+
+  geom_histogram()+
+  facet_grid(.~sim.a)+
+  xlim(0,40)+
+  coord_flip()+
+  ggtitle('additive total')
+
+ggplot(d1.simsAG,aes(x=lod,fill=sim.a))+
+  theme_classic()+
+  geom_rect(xmin = lod.1-lod.window,xmax = lod.1 + lod.window,ymin = -Inf, ymax = Inf,fill = 'lightgray')+
+  geom_histogram()+
+  facet_grid(.~sim.a)+
+  xlim(0,40)+
+  coord_flip()+
+  ggtitle('additive pergeno')
+
+ggplot(d1.simsEG,aes(x=lod,fill=sim.a))+
+  theme_classic()+
+  geom_rect(xmin = lod.1-lod.window,xmax = lod.1 + lod.window,ymin = -Inf, ymax = Inf,fill = 'lightgray')+
+  geom_histogram()+
+  facet_grid(.~sim.a)+
+    xlim(0,60)+
+  coord_flip()+
+  ggtitle('experimental pergeno')
+
+ggplot(d1.simsET,aes(x=lod,fill=sim.a))+
+  theme_classic()+
+  geom_rect(xmin = lod.1-lod.window,xmax = lod.1 + lod.window,ymin = -Inf, ymax = Inf,fill = 'lightgray')+
+  geom_histogram()+
+  facet_grid(.~sim.a)+
+     xlim(0,60)+
+  coord_flip()+
+  ggtitle('experimental total')
+
+
+```
+
+
+We can see this effect more clearly if we look at the simulations for a single effect size; the higher the effect size, the more obvious the difference. 
+
+```{r}
+a1 = as.numeric(as.character(levels(as.factor(d1.simsAT$sim.a))[13]))
+
+sub1.AT = subset(d1.simsAT,sim.a==a1)
+sub1.AG = subset(d1.simsAG,sim.a==a1)
+sub1.ET = subset(d1.simsET,sim.a==a1)
+sub1.EG = subset(d1.simsEG,sim.a==a1)
+
+ggplot(sub1.AT,aes(x=lod))+theme_classic()+
+  geom_histogram(aes(fill='total'),alpha = 0.3)+
+  ggtitle(paste0('dom.model: add, a: ',round(a1,3)))+
+  geom_histogram(data=sub1.AG,aes(fill='per.geno'),alpha = 0.3)
+
+ggplot(sub1.ET,aes(x=lod))+theme_classic()+
+  geom_histogram(aes(fill='total'),alpha = 0.3)+
+  ggtitle(paste0('dom.model: exp, a: ',round(a1,3)))+
+  geom_histogram(data=sub1.EG,aes(fill='per.geno'),alpha = 0.3)
+
+a1 = as.numeric(as.character(levels(as.factor(d1.simsAT$sim.a))[25]))
+
+sub1.AT = subset(d1.simsAT,sim.a==a1)
+sub1.AG = subset(d1.simsAG,sim.a==a1)
+sub1.ET = subset(d1.simsET,sim.a==a1)
+sub1.EG = subset(d1.simsEG,sim.a==a1)
+
+ggplot(sub1.AT,aes(x=lod))+theme_classic()+
+  geom_histogram(aes(fill='total'),alpha = 0.3)+
+  ggtitle(paste0('dom.model: add, a: ',round(a1,3)))+
+  geom_histogram(data=sub1.AG,aes(fill='per.geno'),alpha = 0.3)
+
+ggplot(sub1.ET,aes(x=lod))+theme_classic()+
+  geom_histogram(aes(fill='total'),alpha = 0.3)+
+  ggtitle(paste0('dom.model: exp, a: ',round(a1,3)))+
+  geom_histogram(data=sub1.EG,aes(fill='per.geno'),alpha = 0.3)
+
+
+
+```
+
+
+Next, we look at the total probability distributions for P(E | L1). We can see the shift between dominance and pure additivity; the shift between total and per-genotype variance being held constant is more subtle. 
+
+
+
+```{r}
+d1.AT = read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_tail_dom_additive_window_0.1_total_var_const_prob_distrib.csv')
+d1.AG = read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_tail_dom_additive_window_0.1_pergeno_var_const_prob_distrib.csv')
+d1.EG = read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_tail_dom_experiment_window_0.1_pergeno_var_const_prob_distrib.csv')
+d1.ET = read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_tail_dom_experiment_window_0.1_total_var_const_prob_distrib.csv')
+
+
+d1.All = rbind(d1.AT, d1.EG, d1.ET, d1.AG)
+```
+
+```{r}
+ggplot(d1.All,aes(x=sim.a,y=prob,color=dom.model))+
+  theme_classic()+
+  geom_line()+geom_point()+
+  facet_grid(constant_variance~.)
+  
+ggplot(d1.All,aes(x=sim.a,y=prob,color=constant_variance))+
+  theme_classic()+
+  geom_line()+geom_point()+
+  facet_grid(dom.model~.)
+
+
+```
+
+
+The same effects should hold true in the step 2 simulations - ie these two effects should shift all the lod scores up or down consistently in the two experiments (though perhaps with different slopes.)
+
+Next we can look at P(L2 | E) for the different conditions.
+
+```{r}
+
+d2.AT.e1 <- read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_total_tail_xray.resid.sacrum_dom_additive_total_var_constant_effect_ratio_1_summary_sims.csv')
+d2.AT.e1$dom.model = 'additive'
+d2.AG.e1 <- read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_total_tail_xray.resid.sacrum_dom_additive_pergeno_var_constant_effect_ratio_1_summary_sims.csv')
+d2.AG.e1$dom.model = 'additive'
+
+d2.ET.e1 <- read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_total_tail_xray.resid.sacrum_dom_experiment_total_var_constant_effect_ratio_1_summary_sims.csv')
+d2.ET.e1$dom.model = 'experiment'
+
+d2.EG.e1 <- read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_total_tail_xray.resid.sacrum_dom_experiment_pergeno_var_constant_effect_ratio_1_summary_sims.csv')
+d2.EG.e1$dom.model = 'experiment'
+
+d2.all <- rbind(d2.AG.e1, d2.EG.e1, d2.AT.e1, d2.ET.e1)
+
+d2.all <- subset(d2.all,lod.compared == 'max.over.bayesint')
+
+ggplot(d2.all,aes(x=sim.a.orig,y=prob.less.than.orig,color=dom.model))+
+  geom_point()+geom_line()+
+  facet_grid(constant_variance~.)
+
+
+ggplot(d2.all,aes(x=sim.a.orig,y=prob.less.than.orig,color=constant_variance))+
+  geom_point()+geom_line()+
+  facet_grid(dom.model~.)
+
+```
+
+```{r}
+d3.EG <- merge(subset(d2.EG.e1,lod.compared=='max.over.bayesint'), d1.EG, by.x='sim.a.orig',by.y='sim.a',all=T)
+
+d3.AG <- merge(subset(d2.AG.e1,lod.compared=='max.over.bayesint'), d1.AG, by.x='sim.a.orig',by.y='sim.a',all=T)
+
+d3.ET <- merge(subset(d2.ET.e1,lod.compared=='max.over.bayesint'), d1.ET, by.x='sim.a.orig',by.y='sim.a',all=T)
+
+d3.AT <- merge(subset(d2.AT.e1,lod.compared=='max.over.bayesint'), d1.AT, by.x='sim.a.orig',by.y='sim.a',all=T)
+
+
+d3.all <- rbind(d3.EG, d3.AG, d3.AT, d3.ET)
+
+d3.all$ptot = with(d3.all,prob.less.than.orig * prob)
+
+ggplot(d3.all,aes(x=sim.a.orig,y=ptot,color=dom.model.x))+
+  theme_classic()+
+  geom_point()+
+  geom_line()+
+  facet_grid(constant_variance.x~.)
+
+sum.AG <- sum(subset(d3.all,dom.model.x=='additive' & constant_variance.x=='per_genotype_variance_constant')$ptot)
+sum.AT <- sum(subset(d3.all,dom.model.x=='additive' & constant_variance.x=='total_variance_constant')$ptot)
+
+sum.EG <- sum(subset(d3.all,dom.model.x=='experiment' & constant_variance.x=='per_genotype_variance_constant')$ptot)
+sum.ET <- sum(subset(d3.all,dom.model.x=='experiment' & constant_variance.x=='total_variance_constant')$ptot)
+
+print(c(sum.AG, sum.AT, sum.EG, sum.ET))
+```
+
+Now what if effect was 0.1x? 
+
+
+```{r}
+d2.AT.e1 <- read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_total_tail_xray.resid.sacrum_dom_additive_total_var_constant_effect_ratio_0.1_summary_sims.csv')
+d2.AT.e1$dom.model = 'additive'
+d2.AG.e1 <- read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_total_tail_xray.resid.sacrum_dom_additive_pergeno_var_constant_effect_ratio_0.1_summary_sims.csv')
+d2.AG.e1$dom.model = 'additive'
+
+d2.ET.e1 <- read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_total_tail_xray.resid.sacrum_dom_experiment_total_var_constant_effect_ratio_0.1_summary_sims.csv')
+d2.ET.e1$dom.model = 'experiment'
+
+d2.EG.e1 <- read.csv('../compare_QTL_sims/sims_EPK_phenotype_tail_chr_21/sims_total_tail_xray.resid.sacrum_dom_experiment_pergeno_var_constant_effect_ratio_0.1_summary_sims.csv')
+d2.EG.e1$dom.model = 'experiment'
+# temporary work around:
+d.to.a = with(subset(d2.EG.e1,lod.less.than.orig==TRUE & n>0),sim.d.orig/sim.a.orig)[1]
+d2.EG.e1 <- subset(d2.EG.e1,lod.less.than.orig==TRUE & n>0)
+d2.ET.e1 <- subset(d2.ET.e1,lod.less.than.orig==TRUE & n>0)
+
+d2.all <- rbind(d2.AG.e1, d2.EG.e1, d2.AT.e1, d2.ET.e1)
+
+d2.all <- subset(d2.all,lod.compared == 'max.over.bayesint')
+
+ggplot(d2.all,aes(x=sim.a.orig,y=prob.less.than.orig,color=dom.model))+
+  geom_point()+geom_line()+
+  facet_grid(constant_variance~.)
+
+
+ggplot(d2.all,aes(x=sim.a.orig,y=prob.less.than.orig,color=constant_variance))+
+  geom_point()+geom_line()+
+  facet_grid(dom.model~.)
+
+```
+
+```{r}
+d3.EG <- merge(subset(d2.EG.e1,lod.compared=='max.over.bayesint'), d1.EG, by.x='sim.a.orig',by.y='sim.a',all=T)
+
+d3.AG <- merge(subset(d2.AG.e1,lod.compared=='max.over.bayesint'), d1.AG, by.x='sim.a.orig',by.y='sim.a',all=T)
+
+d3.ET <- merge(subset(d2.ET.e1,lod.compared=='max.over.bayesint'), d1.ET, by.x='sim.a.orig',by.y='sim.a',all=T)
+
+d3.AT <- merge(subset(d2.AT.e1,lod.compared=='max.over.bayesint'), d1.AT, by.x='sim.a.orig',by.y='sim.a',all=T)
+
+
+d3.all <- rbind(d3.EG, d3.AG, d3.AT, d3.ET)
+
+d3.all$ptot = with(d3.all,prob.less.than.orig * prob)
+
+ggplot(d3.all,aes(x=sim.a.orig,y=ptot,color=dom.model.x))+
+  theme_classic()+
+  geom_point()+
+  geom_line()+
+  facet_grid(constant_variance.x~.)
+
+sum.AG <- sum(subset(d3.all,dom.model.x=='additive' & constant_variance.x=='per_genotype_variance_constant')$ptot)
+sum.AT <- sum(subset(d3.all,dom.model.x=='additive' & constant_variance.x=='total_variance_constant')$ptot)
+
+sum.EG <- sum(subset(d3.all,dom.model.x=='experiment' & constant_variance.x=='per_genotype_variance_constant')$ptot)
+sum.ET <- sum(subset(d3.all,dom.model.x=='experiment' & constant_variance.x=='total_variance_constant')$ptot)
+
+print(c(sum.AG, sum.AT, sum.EG, sum.ET))
+```
+
+
+
