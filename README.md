@@ -1,13 +1,6 @@
----
-title: "Simulation-based approach for comparing QTL mapping results"
-output: html_document
----
+##Simulation-based approach for comparing QTL mapping results"
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-#### Purpose
+### Purpose
 
 QTL mapping experiments identify regions of the genome where ancestry is associated with variation in some particular trait of interest, usually in a lab-generated hybrid population. 
 
@@ -17,35 +10,33 @@ This means that if we detect a QTL for some trait in one experiment, but not in 
 
 These scripts implement simulations to provide a quantitative estimate of the probability of obtaining given QTL mapping results if the causal locus were shared with similar effect size in two experiments. Each step can be run from the command line, given two cross objects in the format output by Karl Broman's rqtl package. 
 
-#### Approach
+### Approach
 
 The simulations are broken down into two steps, as follows.
 
 For each QTL detected in one experiment, we would ultimately like to know: If the QTL did represent a shared allele with the same effect size in both experiments, what is the probability that we would have detected no linkage stronger than what we actually observed in the other experiment? We can write that this way:
 
-$$
-P_{results|shared} = P( l_2 \le L_2 \mid l_1 = L_1 )
-$$
-where $l_1$ represents the peak LOD score in experiment 1, $l_2$ is the highest LOD score in some region of the chromosome in experiment 2, and $L_1$ and $L_2$ are the actual experimentally determined values of $l_1$ and $l_2$. In other words, we define $P_{results|shared}$ as the probability that, given that we detected a QTL in experiment 1 with LOD score $L_1$, we would detect no LOD score greater than $L_2$ in experiment 2. 
+![equation](https://latex.codecogs.com/svg.latex?P_%7Bresults%7Cshared%7D%20%3D%20P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20l_1%20%3D%20L_1%20%29)
 
-To find $P_{results|shared}$ we decompose it into two parts: the probability that the true effect size $E$ is some value $e$, given that $l_1 = L_1$, and the probability that $l_2 \le L_2$ given that the true effect size $E$ is $e$:
+where ![equation](https://latex.codecogs.com/svg.latex?l_1) represents the peak LOD score in experiment 1, ![equation](https://latex.codecogs.com/svg.latex?l_2) is the highest LOD score in some region of the chromosome in experiment 2, and ![equation](https://latex.codecogs.com/svg.latex?L_1) and ![equation](https://latex.codecogs.com/svg.latex?L_1) are the actual experimentally determined values of ![equation](https://latex.codecogs.com/svg.latex?l_1) and ![equation](https://latex.codecogs.com/svg.latex?l_2). In other words, we define ![equation](https://latex.codecogs.com/svg.latex?P_%7Bresults%7Cshared%7D) as the probability that, given that we detected a QTL in experiment 1 with LOD score ![equation](https://latex.codecogs.com/svg.latex?L_1), we would detect no LOD score greater than ![equation](https://latex.codecogs.com/svg.latex?L_2) in experiment 2. 
 
-$$
-P( l_2 \le L_2 \mid l_1 = L_1 ) = \sum_e P( l_2 \le L_2 \mid E = e)  P(E = e \mid l_1 = L_1 )
-$$
-The two distributions $P( l_2 \le L_2 \mid E = e)$ and $P(E = e \mid l_1 = L_1 )$ we find by simulation. 
+To find ![equation](https://latex.codecogs.com/svg.latex?P_%7Bresults%7Cshared%7D) we decompose it into two parts: the probability that the true effect size *E* is some value *e*, given that ![equation](https://latex.codecogs.com/svg.latex?l_1%20%3D%20L_1), and the probability that ![equation](https://latex.codecogs.com/svg.latex?l_2%20%3D%20L_2) given that the true effect size *E* is *e*:
+
+![equation](https://latex.codecogs.com/svg.latex?P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20l_1%20%3D%20L_1%20%29%20%3D%20%5Csum_e%20P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20E%20%3D%20e%29%20P%28E%20%3D%20e%20%5Cmid%20l_1%20%3D%20L_1%20%29)
+
+The two distributions ![equation](https://latex.codecogs.com/svg.latex?P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20E%20%3D%20e%29) and ![equation](https://latex.codecogs.com/svg.latex?P%28E%20%3D%20e%20%5Cmid%20l_1%20%3D%20L_1%20%29) we find by simulation. 
 
 *Aside:* We need to decide which LOD score from experiment 2 to use for comparison. In practice, the code saves four options: the highest LOD score on the entire chromosome; the highest LOD score located within the Bayes' credible interval from experiment 1; and the LOD score at the two markers adjacent to the peak marker in experiment 1 (which can ultimately be used to calculate the LOD score at the closest marker). For typical cases the Bayes' credible interval definition is recommended. 
 
 
-#### Running the simulations
-The first step in running the simulations is to approximate $P(E = e \mid l_1 = L_1 )$ in experiment 1 (the experiment in which the QTL of interest was detected). This is done using the file **simulate_effect_size_distrib_given_LOD.R**. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
+### Running the simulations
+The first step in running the simulations is to approximate ![equation](https://latex.codecogs.com/svg.latex?P%28E%20%3D%20e%20%5Cmid%20l_1%20%3D%20L_1%20%29) in experiment 1 (the experiment in which the QTL of interest was detected). This is done using the file **simulate_effect_size_distrib_given_LOD.R**. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
 
-The second step is to approximate $P( l_2 \le L_2 \mid E = e)$ for each effect size that could have generated the LOD score in experiment 1. This is done using the file **simulate_LOD_distrib_given_effect_size.R**. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
+The second step is to approximate ![equation](https://latex.codecogs.com/svg.latex?P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20E%20%3D%20e%29) for each effect size that could have generated the LOD score in experiment 1. This is done using the file **simulate_LOD_distrib_given_effect_size.R**. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
 
 The third step is to combine these distributions; because the file names and desired output may depend somewhat on the particular details of the experiment, this is done interactively; an example is shown in the file **gather_QTL_comparison_output_example.R**. 
 
-#### Required packages
+### Required packages
 To run these scripts, you will need the following packages installed:
 
 --argparse  
@@ -53,7 +44,7 @@ To run these scripts, you will need the following packages installed:
 --dplyr  
 --tidyr
 
-#### Inputs
+### Inputs
 
 The scripts are designed to be run such that the simulations for each QTL peak reside in a unique folder. This makes the output of simulations from step 1 unambiguously available as input for step 2. 
 
@@ -80,7 +71,7 @@ The default setting assumes the effect size in experiment 2 is equal to that in 
 
 Additional options can be specified; use Rscript <filename.R> --help to see the documentation for these. 
 
-#### Outputs
+### Outputs
 
 Each step outputs two csv files. The first (suffix _all_sims.csv) contains the results from each individual simulation run (e.g. the peak marker and LOD scores); to save space, the \--lose_sims flag can be set to prevent saving this file. 
 
