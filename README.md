@@ -1,4 +1,4 @@
-##Simulation-based approach for comparing QTL mapping results"
+## Simulation-based approach for comparing QTL mapping results
 
 ### Purpose
 
