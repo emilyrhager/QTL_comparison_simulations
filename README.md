@@ -44,6 +44,8 @@ To run these scripts, you will need the following packages installed:
 --dplyr  
 --tidyr
 
+The step3_example uses stringr as well, to pull information from folder names, but this is not critical. 
+
 ### Inputs
 
 The scripts are designed to be run such that the simulations for each QTL peak reside in a unique folder. This makes the output of simulations from step 1 unambiguously available as input for step 2. 

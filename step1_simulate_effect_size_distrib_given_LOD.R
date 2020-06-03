@@ -107,7 +107,7 @@ if(args$round){
 print('Starting up... Files will be saved in with prefix:')
 print(save.path)
 
-##### BEGIN RUNNING #####
+##### BEGIN EXECUTION #####
 
 # Set of effect sizes to test
 effect.list <- seq(min.effect, max.effect, (max.effect - min.effect)/n.effect)
@@ -163,7 +163,8 @@ if(dom.model!='additive' & dom.model!='experiment'){
 }
 
 
-# Run simulations
+##### RUN SIMULATIONS #####
+
 all.sim.peaks <- data.frame()
 for(afactor in effect.list){
   a = afactor * orig.a
@@ -260,6 +261,8 @@ for(afactor in effect.list){
 }
 
 all.sim.peaks$chr <- chr.1
+
+##### SUMMARIZE AND SAVE OUTPUT #####
 
 # Save raw simulation output
 if(save.all.sims){

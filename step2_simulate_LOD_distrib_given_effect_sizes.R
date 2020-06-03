@@ -65,12 +65,7 @@ if(args$total_variance_constant == FALSE){
     vartag = 'pergeno'
 }
 
-if(args$identical_cross_object == TRUE){
-  sameobj = TRUE
-}
-if(args$identical_cross_object == FALSE){
-  sameobj = FALSE
-}
+sameobj = args$identical_cross_object
 
 
 file.header <- paste0('sims_',pheno.name.2,dlabel,vartag,'_var_constant_effect_ratio_',effect.ratio)
@@ -82,6 +77,7 @@ if(args$lose_sims == TRUE){
   save.all.sims <- FALSE
 }
 
+# Find output of step 1 run:
 if(is.null(args$sim_file)){
   sim_list <- sort(Sys.glob(file.path(save.folder,paste0('sims*',dlabel,'*',vartag,'*prob_distrib.csv'))))
   
@@ -103,6 +99,8 @@ if(!is.null(args$sim_file)){
 round = args$round
 
 save.path <- file.path(save.folder,file.header)
+
+##### BEGIN MAIN STEPS #####
 
 print(paste0('Beginning... Files will be saved with prefix ',save.path))
 
@@ -205,7 +203,8 @@ if(sameobj == TRUE){
   marker.pos.right = orig.marker.pos.1
 }
 
-# Run simulations
+##### RUN SIMULATIONS #####
+
 report.interval = ceiling(nsim/5)
 all.sim.peaks <- data.frame()
 for(row in 1:nrow(sim.df)){
@@ -341,6 +340,8 @@ for(row in 1:nrow(sim.df)){
   all.sim.peaks <- rbind(all.sim.peaks, sim.peaks.out)
 
 }
+
+##### SUMMARIZE AND SAVE #####
 
 # Next, obtain chromosome-wide, left- and right- flanking marker, and bayes-interval LOD scores
 # from the original map. 

@@ -3,6 +3,8 @@
 
 get_genotype_probabilities_at_marker<- function(cross.obj, chr.name, marker.name, geno.class){
   
+  " Obtain genotype probabilities for a given genotype class (AA, AB, BB) at a given marker "
+  
   # Genotype probabilities for all classes, for the chromosome of interest: 
   # dimension n_individuals x n_markers x 3
   chromosome_geno_probs = cross.obj$geno[[chr.name]]$prob
@@ -17,7 +19,9 @@ get_genotype_probabilities_at_marker<- function(cross.obj, chr.name, marker.name
 }
 
 take_first_unique_input <- function(df, col){
+  
   " Return the first unique value in column col of dataframe df. If more than one value present, print a warning."
+  
   vals = unique(df[[col]])
   if(length(vals)>1){
     print(paste0('Problem: dataframe column ',col,' has multiple values; expected only one. Taking first value.'))
@@ -27,6 +31,9 @@ take_first_unique_input <- function(df, col){
 
 
 count_sims_below_lod <- function(df, grp){
+  
+  " Count the number of simulations that meet the given criteria "
+  
   colnames <- structure(c('lod.chr.less.than.orig','lod.left.less.than.orig','lod.right.less.than.orig','lod.bayes.less.than.orig'),
                         names=c('max.over.chr','left.flanking.marker','right.flanking.marker','max.over.bayesint'))
   
@@ -47,6 +54,9 @@ count_sims_below_lod <- function(df, grp){
 }
 
 merge_step1_step2_output <- function(step1df, step2df){
+  
+  " Merge the results of step 1 and step 2 simulations and calculate the final probability value "
+  
   cdf = merge(step1df,step2df, by.x = c('sim.a','constant_variance','model','method'),
               by.y=c('sim.a.orig','constant_variance','model','method'), all = T)
   cdf$pcomb = with(cdf,prob*prob.less.than.orig)

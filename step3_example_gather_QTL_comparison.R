@@ -1,8 +1,13 @@
 #  Example script to gather and plot QTL simulation output for a specific project.
+#  The key function is merge_step1_step2_output, in simulation_functions.R.
+#    This is a more detailed example gathering and plotting the results for a specific project 
+#    that involved comparing multiple settings for dominance and per-genotype variance, and five effect size ratios.
+#
 #  Author: Emily R Hager, 2020
 
 library(dplyr)
 library(ggplot2)
+library(stringr)
 
 source('simulation_functions.R')
 
@@ -14,14 +19,18 @@ simfold = '/Volumes/hoekstra_lab/Users/hager/QTL/compare_QTL_sims_JTG/'
 # two traits (QTL detected for trait w1 on chromosome chr; testing if shared with trait w2)
 # const: whether total or per-genotype variance was held constant
 # dom: whether locus was assumed to be additive
+# w1, w2: the two phenotypes being compared
+
 gather_sim_data <- function(chr, w1, w2, const, dom, simfold){
   " Gather simulation output for a given chromosome/trait across all values of effect size. "
   
+  # Read step 1 output (same for all effect ratios)
   f = paste0(simfold,'sims_chr_',chr,'_',w1,'_',w2)
   step1df = read.csv(paste0(f,'/sims_',w1,'_res_dom_',dom,'_window_0.1_',const,'_var_const_prob_distrib.csv'))
   
   outdf = data.frame()
   
+  # elist = the effect size ratios that were tested
   if(dom=='experiment' & const == 'total'){
     elist = c(0.1,0.25,0.5,0.75,1)
   }
@@ -29,8 +38,10 @@ gather_sim_data <- function(chr, w1, w2, const, dom, simfold){
     elist = 1
   }
   
-  for(e in elist){
+  for(e in elist){ 
     
+    # Read step 2 output for this effect ratio
+    # and combine with step 1 output to calculate final probability
     step2e = read.csv(paste0(f,'/sims_',w2,'_res_dom_',dom,'_',const,'_var_constant_effect_ratio_',
                              e,'_summary_sims.csv'))
     sdf = merge_step1_step2_output(step1df, step2e) # function from simulation_functions.R
@@ -45,6 +56,7 @@ gather_sim_data <- function(chr, w1, w2, const, dom, simfold){
 wlist = c('alpha','beta','gamma','delta')
 resdf = data.frame()
 for(s1 in Sys.glob(paste0(simfold,'*step1*'))){
+  # Pull the chromosome and traits from the name of the output folder.
   bn = str_split(basename(s1),'_')[[1]]
   chr = bn[4]
   w1 = bn[5]
@@ -52,7 +64,7 @@ for(s1 in Sys.glob(paste0(simfold,'*step1*'))){
     for(dom in c('additive','experiment')){
       for(w2 in wlist[!wlist==w1]){
         print(c(chr,w1,w2,const,dom))
-        resdf = rbind(resdf,gather_sim_data(chr,w1,w2,const,dom,simfold))
+        resdf = rbind(resdf, gather_sim_data(chr,w1,w2,const,dom,simfold))
       }
     }
   }
@@ -102,7 +114,6 @@ ggplot(subset(resdf, constant_variance == 'total_variance_constant' & dom.model 
   facet_wrap(~chromosome)+scale_x_reverse()+
   geom_hline(yintercept = c(0.01,0.05),color='lightgray')+
   ggtitle('max over whole chromosome')
-
 
 ggplot(subset(resdf, constant_variance == 'total_variance_constant' & dom.model == 'experiment' & lod.compared == 'max.over.bayesint'))+
   theme_classic()+
