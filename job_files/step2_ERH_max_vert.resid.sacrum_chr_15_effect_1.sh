@@ -10,6 +10,6 @@
 module load Anaconda3/5.0.1-fasrc01
 source activate rqtl_env
 
-Rscript simulate_LOD_distrib_given_effect_sizes.R --cross_object /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/data/EPK_20191218_genoprob.rds --phenotype maxvert --folder /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/compare_QTL_sims/sims_ERH_phenotype_max_vert.resid.sacrum_chr_15 --effect_ratio 1 --geno_reversed --dom_model additive  
+Rscript step2_simulate_LOD_distrib_given_effect_sizes.R --cross_object /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/data/EPK_20191218_genoprob.rds --phenotype maxvert --folder /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/compare_QTL_sims/sims_ERH_phenotype_max_vert.resid.sacrum_chr_15 --effect_ratio 1 --geno_reversed --dom_model additive  
 
 source deactivate

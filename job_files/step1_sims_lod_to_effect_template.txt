@@ -14,6 +14,6 @@ source activate rqtl_env
 
 mkdir {}
 
-Rscript simulate_effect_size_distrib_given_LOD.R --cross_object {} --chromosome {} --phenotype {} --folder {} --nsim {} --neffect {} --min_effect {} --max_effect {} --dom_model {} --lod_window {} --method {} --model {} {} {}
+Rscript step1_simulate_effect_size_distrib_given_LOD.R --cross_object {} --chromosome {} --phenotype {} --folder {} --nsim {} --neffect {} --min_effect {} --max_effect {} --dom_model {} --lod_window {} --method {} --model {} {} {}
 
 source deactivate

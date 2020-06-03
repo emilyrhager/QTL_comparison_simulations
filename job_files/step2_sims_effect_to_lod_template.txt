@@ -12,6 +12,6 @@
 module load Anaconda3/5.0.1-fasrc01
 source activate rqtl_env
 
-Rscript /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/analysis/simulate_LOD_distrib_given_effect_sizes_20191223.R --cross_object {} --phenotype {} --folder {} --effect_ratio {} --geno_reversed {} {} {}
+Rscript step2_simulate_LOD_distrib_given_effect_sizes.R --cross_object {} --phenotype {} --folder {} --effect_ratio {} --geno_reversed {} {} {}
 
 source deactivate

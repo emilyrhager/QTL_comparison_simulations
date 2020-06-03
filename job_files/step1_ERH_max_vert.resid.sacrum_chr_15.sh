@@ -12,6 +12,6 @@ source activate rqtl_env
 
 mkdir /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/compare_QTL_sims/sims_ERH_phenotype_max_vert.resid.sacrum_chr_15
 
-Rscript simulate_effect_size_distrib_given_LOD.R --cross_object /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/data/SWxBK_rqtl_all_object_20191223.RDS --chromosome 15 --phenotype max_vert.resid.sacrum --folder /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/compare_QTL_sims/sims_ERH_phenotype_max_vert.resid.sacrum_chr_15 --nsim 5000 --neffect 25 --min_effect 0 --max_effect 2.5 --dom_model additive --lod_window 0.1 --method ehk --model normal  
+Rscript step1_simulate_effect_size_distrib_given_LOD.R --cross_object /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/data/SWxBK_rqtl_all_object_20191223.RDS --chromosome 15 --phenotype max_vert.resid.sacrum --folder /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/compare_QTL_sims/sims_ERH_phenotype_max_vert.resid.sacrum_chr_15 --nsim 5000 --neffect 25 --min_effect 0 --max_effect 2.5 --dom_model additive --lod_window 0.1 --method ehk --model normal  
 
 source deactivate
