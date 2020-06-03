@@ -1,24 +1,85 @@
-# QTL comparison simulations
+## Simulation-based approach for comparing QTL mapping results
 
-Scripts to run simulations to test the likelihood that detected QTL are NOT shared with similar effect size in two experiments. 
+### Purpose
 
-This approach can be applied either for QTL maps generated for two comparable traits in the same mapping population, or for the same trait in two different mapping populations. 
+QTL mapping experiments identify regions of the genome where ancestry is associated with variation in some particular trait of interest, usually in a lab-generated hybrid population. 
 
-It relies on QTL mapping data represented using the cross object from Karl Broman's rqtl package (TODO: LINK). 
+One challenge for comparing QTL maps (e.g. maps for the same trait in two populations, or for two traits in the same population) is that for typical effect sizes and sample sizes, causative loci can often be missed due to sampling error, and in addition, effect sizes are likely to be overestimated for loci that do pass genome-wide significance thresholds. 
 
-# Overview
+This means that if we detect a QTL for some trait in one experiment, but not in another, it is not trivial to assess whether that result is likely because a true, shared associated locus was missed in one of the experiments, or instead whether the causal locus is in fact not shared.
 
-## The question
-QTL mapping studies often generate association maps for multiple, related traits (e.g. the lengths of several whiskers) in one population, or for the same trait (e.g. total tail length) in two, parallel populations. An interesting question then becomes whether each detected locus is likely independent (i.e. has an effect on one trait/in one population, and a much smaller or no effect in the other) or whether it may be shared. 
+These scripts implement simulations to provide a quantitative estimate of the probability of obtaining given QTL mapping results if the causal locus were shared with similar effect size in two experiments. Each step can be run from the command line, given two cross objects in the format output by Karl Broman's rqtl package. 
 
-Just using a binary comparison (detected above the significance threshold or not; confidence intervals overlap or not) is not sufficient for this purpose, because we know that QTL mapping experiments will likely not detect all causative alleles present in the cross founders, and will likely over-estimate effect sizes for loci that are detected (e.g. Beavis, 1994; Slate, 2013). With this in mind, we would like to have a quantitative estimate, given experimental data, for how likely it is, if a certain detected locus is shared (between two traits in one experiment or between the same trait in two experiments), that we would obtain a pattern of association as or more extreme than our actual results. Here we use a simulation-based approach to address this question.
+### Approach
 
-## Main ideas
-We approach this by breaking the question down into two steps: first, we estimate the distribution of true effect sizes that may have generated the detected LOD score for the experiment in which the QTL of interest was detected (experiment 1). Second, we estimate the probability of obtaining LOD scores less than or equal to the values found in experiment 2, if we assume the locus is shared with each possible effect size. We sum these estimates over the distribution of possible effect sizes to get the total probability that the locus is shared with similar effect size given the data. 
+The simulations are broken down into two steps, as follows.
 
-# Approach
+For each QTL detected in one experiment, we would ultimately like to know: If the QTL did represent a shared allele with the same effect size in both experiments, what is the probability that we would have detected no linkage stronger than what we actually observed in the other experiment? We can write that this way:
 
-# To use
+![equation](https://latex.codecogs.com/svg.latex?P_%7Bresults%7Cshared%7D%20%3D%20P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20l_1%20%3D%20L_1%20%29)
+
+where ![equation](https://latex.codecogs.com/svg.latex?l_1) represents the peak LOD score in experiment 1, ![equation](https://latex.codecogs.com/svg.latex?l_2) is the highest LOD score in some region of the chromosome in experiment 2, and ![equation](https://latex.codecogs.com/svg.latex?L_1) and ![equation](https://latex.codecogs.com/svg.latex?L_1) are the actual experimentally determined values of ![equation](https://latex.codecogs.com/svg.latex?l_1) and ![equation](https://latex.codecogs.com/svg.latex?l_2). In other words, we define ![equation](https://latex.codecogs.com/svg.latex?P_%7Bresults%7Cshared%7D) as the probability that, given that we detected a QTL in experiment 1 with LOD score ![equation](https://latex.codecogs.com/svg.latex?L_1), we would detect no LOD score greater than ![equation](https://latex.codecogs.com/svg.latex?L_2) in experiment 2. 
+
+To find ![equation](https://latex.codecogs.com/svg.latex?P_%7Bresults%7Cshared%7D) we decompose it into two parts: the probability that the true effect size *E* is some value *e*, given that ![equation](https://latex.codecogs.com/svg.latex?l_1%20%3D%20L_1), and the probability that ![equation](https://latex.codecogs.com/svg.latex?l_2%20%3D%20L_2) given that the true effect size *E* is *e*:
+
+![equation](https://latex.codecogs.com/svg.latex?P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20l_1%20%3D%20L_1%20%29%20%3D%20%5Csum_e%20P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20E%20%3D%20e%29%20P%28E%20%3D%20e%20%5Cmid%20l_1%20%3D%20L_1%20%29)
+
+The two distributions ![equation](https://latex.codecogs.com/svg.latex?P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20E%20%3D%20e%29) and ![equation](https://latex.codecogs.com/svg.latex?P%28E%20%3D%20e%20%5Cmid%20l_1%20%3D%20L_1%20%29) we find by simulation. 
+
+*Aside:* We need to decide which LOD score from experiment 2 to use for comparison. In practice, the code saves four options: the highest LOD score on the entire chromosome; the highest LOD score located within the Bayes' credible interval from experiment 1; and the LOD score at the two markers adjacent to the peak marker in experiment 1 (which can ultimately be used to calculate the LOD score at the closest marker). For typical cases the Bayes' credible interval definition is recommended. 
+
+
+### Running the simulations
+The first step in running the simulations is to approximate ![equation](https://latex.codecogs.com/svg.latex?P%28E%20%3D%20e%20%5Cmid%20l_1%20%3D%20L_1%20%29) in experiment 1 (the experiment in which the QTL of interest was detected). This is done using the file **simulate_effect_size_distrib_given_LOD.R**. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
+
+The second step is to approximate ![equation](https://latex.codecogs.com/svg.latex?P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20E%20%3D%20e%29) for each effect size that could have generated the LOD score in experiment 1. This is done using the file **simulate_LOD_distrib_given_effect_size.R**. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
+
+The third step is to combine these distributions; because the file names and desired output may depend somewhat on the particular details of the experiment, this is done interactively; an example is shown in the file **gather_QTL_comparison_output_example.R**. 
+
+### Required packages
+To run these scripts, you will need the following packages installed:
+
+--argparse  
+--qtl  
+--dplyr  
+--tidyr
+
+The step3_example uses stringr as well, to pull information from folder names, but this is not critical. 
+
+### Inputs
+
+The scripts are designed to be run such that the simulations for each QTL peak reside in a unique folder. This makes the output of simulations from step 1 unambiguously available as input for step 2. 
+
+**For step 1**, required inputs are:  
+-- the cross object for experiment 1 (must have genotype probabilities already calculated, via qtl::calc.genoprob or some other method)  
+-- the chromosome where the detected QTL is located (note: X chromosome not supported; assumes just one QTL per chromosome at this point.)  
+-- the name of the phenotype (i.e. name of the column in cross_object$pheno)  
+-- the folder to save output (should be a separate folder for each QTL peak)  
+
+The default options run 100 simulations per effect size, for 5 effect sizes between 0 and 2.5x the effect size detected in the original experiment, and count LOD scores that fall within +/- 1 of the experimentally determined LOD score. These defaults are designed for ease of testing locally; in practice I use 5000 simulations per effect size for 25 effect sizes in the same range, and count LOD scores that fall within +/- 0.1 of the original LOD score. The default assumes the locus is purely additive; this can be changed to either take the dominance ratio from the experiment or to set d/a to a specific value (e.g. 1 for a purely dominant locus).
+
+Other defaults that may be adjusted include:  
+-setting the per-genotype variance to the total variance in the phenotype in the hybrid population; this can be changed so that the per-genotype variance varies with effect size to maintain total variance in the hybrids instead;  
+-the method used for QTL mapping; default is extended Haley-Knott ('ehk')
+
+**For step 2**, the required inputs are:  
+-- the cross object for experiment 2 (must have genotype probabilities already calculated, via qtl::calc.genoprob or some other method)  
+-- the name of the phenotype in experiment 2 (i.e. name of the column in cross_object$pheno)  
+-- the folder to save output (should be the output folder used in step 1)  
+
+The default options for the most part draw the parameters for the simulations to match the output from step 1. One exception is that to identify the correct input file, the default for step 2 is to assume the per-genotype variance was constant; this parameter must be changed for simulations where total variance was held constant instead. Similarly, the dominance ratio can be set if needed to distinguish among different runs of step_1 when choosing the input file. 
+
+The default setting assumes the effect size in experiment 2 is equal to that in experiment 1; to perform a sensitivity analysis to see how the results vary if this assumption is relaxed, \--effect_ratio can be set to any value (e.g. setting effect_ratio to 0.5 will perform the simulations with the effect of the locus in experiment 2 equal to half that from experiment 1).
+
+Additional options can be specified; use Rscript <filename.R> --help to see the documentation for these. 
+
+### Outputs
+
+Each step outputs two csv files. The first (suffix _all_sims.csv) contains the results from each individual simulation run (e.g. the peak marker and LOD scores); to save space, the \--lose_sims flag can be set to prevent saving this file. 
+
+The second (suffix _prob_distrib.csv for step 1 and _summary_sims.csv for step 2) contains summary information about the settings that were used to run the simulations and the output for each effect size e. 
+
+The final step is to combine the information from these two files to calculate the final output probabilities, as shown in gather_QTL_comparison_output_example.R.
 
 # Author
 Emily R. Hager, 2020

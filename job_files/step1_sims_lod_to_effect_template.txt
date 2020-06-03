@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH -n 1			# Number of cores
+#SBATCH -N 1			# All cores on one machine
+#SBATCH -t {}    		# Time in D-HH:MM
+#SBATCH -p hoekstra,shared	# partition
+#SBATCH --mem=8000		# memory
+#SBATCH -o /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/compare_QTL_sims/job_files/output/step1_{}_%j.out
+#SBATCH -e /n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/compare_QTL_sims/job_files/output/step1_{}_%j.err
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user={}
+
+module load Anaconda3/5.0.1-fasrc01
+source activate rqtl_env
+
+mkdir {}
+
+Rscript step1_simulate_effect_size_distrib_given_LOD.R --cross_object {} --chromosome {} --phenotype {} --folder {} --nsim {} --neffect {} --min_effect {} --max_effect {} --dom_model {} --lod_window {} --method {} --model {} {} {}
+
+source deactivate

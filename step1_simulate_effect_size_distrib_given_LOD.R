@@ -1,43 +1,39 @@
 #!/usr/bin/env Rscript
 
+# Author: Emily R. Hager, 2020
 
+# Simulations Step 1:
 
 # Use simulations to approximate the probability distribution of 
-# effect sizes that could lead to a given detected LOD score: P(E|LOD.1).
-
-# Inputs:
-# path to cross object
-# chromosome of interest (at the moment, assumes a single peak per chromosome)
-# trait of interest
-# mapping method (default: ehk) and model (default: normal); note that the phenotypes are simulated as random normal draws so if not normal you might have a problem. 
-# number of simulations to run per effect size
-# range of effect sizes to run, as a function of the effect size of the QTL
-# number of effect sizes to run (together these determine the resolution);  if you want to include 1 this should be odd.
-# dominance assumption (options: additive-only, set ratio manually, take ratio from the map)
-# window around lod score to include as 'hits' when calculating prob distribution.
-# save folder: folder to save output. 
+# effect sizes that could lead to a given detected LOD score: 
+#         P(effect size == e | LOD == L)
 
 require(qtl)
 require(argparse)
 require(dplyr)
-require(stringr)
+
+source('simulation_functions.R')
 
 # Parse user inputs.
 parser <- ArgumentParser()
 
 # Required
-parser$add_argument("-o", "--cross_object", help="Path to rqtl cross object (saved as .rds) to use for simulations", required = T)
-parser$add_argument("-c", "--chromosome", help="Chromosome with the locus of interest", required = T)
+parser$add_argument("-o", "--cross_object", help="Path to rqtl cross object to use for simulations (saved as .rds). Genotype probabilities must already be present. If not, run calc.genoprob first. Note: marker names are assumed in bp (e.g. chr15_1234, chr15:1234)", required = T)
+parser$add_argument("-c", "--chromosome", help="Chromosome with the locus of interest. Note: X chromosome not currently supported.", required = T)
 parser$add_argument("-p","--phenotype", help = "Phenotype to test (must match name of the cross object pheno column", required = T)
 parser$add_argument("-f", "--folder", help = "Path to folder to put output files", required = T)
 
 # Optional
-parser$add_argument("-n", "--nsim", default = 100, help = "Number of simulations per effect size; default %(default)s.")
-parser$add_argument("-e", "--neffect", default = 5, help = "Number of effect sizes to test; default %(default)s.")
-parser$add_argument("--min_effect", default = 0.5, help = "Smallest effect size to test, as a function of the detected QTL effect size (i.e., --min.effect 0.5 will set the minimum effect size to 0.5 times the detected effect; default %(default)s")
-parser$add_argument("--max_effect", default = 2, help = "Largest effect size to test, as a function of the detected QTL effect size (i.e., --max.effect 2 will set the minimum effect size to 2 times the detected effect; default %(default)s")
+parser$add_argument("-n", "--nsim", default = 100, help = "Number of simulations per effect size; default %(default)s.",
+                    type = "integer")
+parser$add_argument("-e", "--neffect", default = 5, help = "Number of effect sizes to test; default %(default)s.",
+                    type = "integer")
+parser$add_argument("--min_effect", default = 0.0, help = "Smallest effect size to test, as a function of the detected QTL effect size (i.e., --min.effect 0.5 will set the minimum effect size to 0.5 times the detected effect; default %(default)s")
+parser$add_argument("--max_effect", default = 2.5, help = c("Largest effect size to test, as a function of the detected QTL effect size",
+                    "(i.e., --max.effect 2 will set the minimum effect size to 2 times the detected effect; default %(default)s"))
 parser$add_argument("-d", "--dom_model", default = 'additive', help = "Dominance model to use for sims. Options are: (1) (default) 'additive': sims use additive effects only; (2) 'experiment': sims use the d:a ratio detected in the original map for all effect sizes; or (3) a number: the number specified here will be taken as the ratio of d to a.")
-parser$add_argument("-w", "--lod_window", default = 1, help = "The half-width of the window around the detected lod score that will be used to generate the probability distribution. For example, -w 1 (the default) gives the probability distribution of effect sizes that would generate a lod score within +/- 1 of the detected score")
+parser$add_argument("-w", "--lod_window", default = 1.0, help = "The half-width of the window around the detected lod score that will be used to generate the probability distribution. For example, -w 1 (the default) gives the probability distribution of effect sizes that would generate a lod score within +/- 1 of the detected score",
+                    type = 'double')
 parser$add_argument("-m", "--method", default = 'ehk', help = "Method for QTL mapping; default ehk")
 parser$add_argument("--model", default = 'normal', help = "Model to use for QTL mapping; default normal. CAREFUL: data for sims generated from random normal distribution regardless, so modify with care.")
 parser$add_argument("--file_header", help = "First part of the output file names. Default is: 'sims_{phenotype}_dom_{dominance model}_window_{lod window}_'")
@@ -48,33 +44,27 @@ parser$add_argument("--total_variance_constant", "-v", action = "store_true", he
 args <- parser$parse_args()
 
 
-
-
-
 # Required
-cross.path <- args$cross_object #'/n/holylfs03/LABS/hoekstra_lab/Users/hager/QTL/data/SWxBK_rqtl_all_object_20191118.RDS'
+cross.path <- args$cross_object 
 chr.1 <- as.numeric(as.character(args$chromosome))
 
 # special case: X
 if(is.na(chr.1)){
-  print('Sims need to be adjusted for the X chromosome.')
+  print('Simulations need to be adjusted for the X chromosome.')
   chr.1 = as.character(args$chromosome)
   if(!chr.1=='X'){
-    print(paste0('Specified chromosome, ',args$chromosome,' is neither numeric nor X - are you sure?'))
+    print(paste0('Specified chromosome, ',args$chromosome,' is neither numeric nor X.'))
   }
 }
-
 
 pheno.name.1 <- args$phenotype
 save.folder <- args$folder
 
-nsim <- as.integer(as.character(args$nsim))
+nsim <- args$nsim
+n.effect <- args$neffect
+min.effect <- args$min_effect
+max.effect <- args$max_effect
 
-n.effect <- as.integer(as.character(args$neffect))
-
-min.effect <- as.numeric(as.character(args$min_effect))
-
-max.effect <- as.numeric(as.character(args$max_effect))
 dom.model <- as.character(args$dom_model)
 if(!(dom.model %in% c('additive','experiment'))){
   dom.model <- as.numeric(dom.model)
@@ -85,16 +75,15 @@ if(is.na(dom.model)){
   # If don't revert, could result in very long runs that fail silently by being full of NAs.
   }
 
-lod.window <- as.numeric(as.character(args$lod_window))
-
+lod.window <- args$lod_window
 method.1 <- args$method
-
 model.1 <- args$model
 
 save.all.sims <- TRUE
 if(args$lose_sims == TRUE){
   save.all.sims <- FALSE
 }
+
 total.var.constant = FALSE
 var_tag = '_pergeno_var_const'
 if(args$total_variance_constant == TRUE){
@@ -107,7 +96,7 @@ if(!is.null(args$file_header)){
   file.header <- args$file_header
 }
 
-report.interval = ceiling(nsim/5) # report progress 5x per set of sims.
+report.interval = ceiling(nsim/5) # report progress 5x per set of simulations.
 save.path <- file.path(save.folder, file.header)
 
 round = FALSE
@@ -118,10 +107,10 @@ if(args$round){
 print('Starting up... Files will be saved in with prefix:')
 print(save.path)
 
-##### BEGIN RUNNING THE FUNCTIONS #####
+##### BEGIN EXECUTION #####
 
 # Set of effect sizes to test
-effect.list <- seq( min.effect, max.effect, (max.effect - min.effect)/n.effect )
+effect.list <- seq(min.effect, max.effect, (max.effect - min.effect)/n.effect)
 
 # Load cross object
 cross.obj <- readRDS(cross.path)
@@ -142,23 +131,16 @@ orig.peaks.1 <- summary(orig.map.1)
 LOD.1 = orig.peaks.1$lod
 marker.pos.1 = orig.peaks.1$pos
 marker.name.1 = row.names(orig.peaks.1)
-# check for 'loc':
-if(!is.na(str_split(marker.name.1,paste0('c',chr.1,'.'))[[1]][2])){
-  marker.name.1 = str_split(marker.name.1,paste0('c',chr.1,'.'))[[1]][2]
-}
+
 pheno.sd.1 = sd(cross.obj$pheno[[pheno.name.1]],na.rm=T)
 ninds = dim(cross.obj$pheno)[[1]]
 BI = bayesint(orig.map.1)
 lower.bayes.1 = min(BI$pos)
 upper.bayes.1 = max(BI$pos)
 
-# Get separator from cross object.
-# Assumes names are in the format chr[number or 'X'][something that's not a digit][more digits]
-# and extracts the [something that's not a digit] from the first marker name on the first chromosome.
-
-pAA = cross.obj$geno[[chr.1]]$prob[ ,names(cross.obj$geno[[chr.1]]$prob[1,,'AA'])==marker.name.1,'AA']
-pAB = cross.obj$geno[[chr.1]]$prob[ ,names(cross.obj$geno[[chr.1]]$prob[1,,'AB'])==marker.name.1,'AB']
-pBB = cross.obj$geno[[chr.1]]$prob[ ,names(cross.obj$geno[[chr.1]]$prob[1,,'BB'])==marker.name.1,'BB']
+pAA = get_genotype_probabilities_at_marker(cross.obj, chr.1, marker.name.1, 'AA')
+pAB = get_genotype_probabilities_at_marker(cross.obj, chr.1, marker.name.1, 'AB')
+pBB = get_genotype_probabilities_at_marker(cross.obj, chr.1, marker.name.1, 'BB')
 
 # Get dominance ratio
 mAA = mean(cross.obj$pheno[[pheno.name.1]][pAA>=0.5],na.rm=T)
@@ -172,16 +154,17 @@ if(dom.model=='additive'){
   d.to.a = 0
 }
 if(dom.model=='experiment'){
-  # use the ratio from orig.map object
+  # use the ratio from original map object
   d.to.a = orig.d/orig.a
 }
 if(dom.model!='additive' & dom.model!='experiment'){
-  # User should have used d:a ratio as the argument
+  # User should have specified d:a ratio as the argument
   d.to.a = dom.model
 }
 
 
-# Run simulations
+##### RUN SIMULATIONS #####
+
 all.sim.peaks <- data.frame()
 for(afactor in effect.list){
   a = afactor * orig.a
@@ -195,17 +178,16 @@ for(afactor in effect.list){
   meanBB = 2*a
   
   # Simulate phenotypes
-  simphenos = data.frame()
   simphenos = data.frame('pgm' = cross.obj$pheno$pgm)
   
   for(i in 1:nsim){
     
-    # For each simulation assign genotypes to each individual according to genotype probabilities.
+    # For each simulation, assign genotypes to each individual according to genotype probabilities.
     pick_geno_vals = runif(ninds,0,1)
     
-    # Set up phenotypic variance
     if(total.var.constant){
-      # Hold total variance constant
+      # Hold total variance constant; thus, calculate per-geno variance
+      # based on effect size a and d, and the number of individuals in each genotype class.
       nAA = sum(pick_geno_vals >= (pBB + pAB))
       nBB = sum(pick_geno_vals < pBB)
       nAB = ninds - nAA - nBB
@@ -216,6 +198,9 @@ for(afactor in effect.list){
       }
       if(pheno.var < 0){
         pheno.sd = -1 # just a flag. 
+        # if the simulated effect size is too large to exist while maintaining the 
+        # total variance equal to that from the original experiment,
+        # the variance would be negative here, so we watch for it. 
       }
       
     }
@@ -223,21 +208,22 @@ for(afactor in effect.list){
       # Hold per-genotype variance constant and equal to total variance in the cross object
       pheno.sd = pheno.sd.1
     }
+    
     if(pheno.sd >= 0){
       
-      # sim all from AA distrib.
+      # simulate phenotypes as if all individuals are drawn from AA distribution.
       phenos_sim = rnorm(ninds, mean = meanAA, sd = pheno.sd)
       
-      # replace AB and BB genos with AB distrib.
+      # replace AB and BB genotypes with phenotypes drawn from the AB distribution.
       phenos_sim[pick_geno_vals < (pBB + pAB)] = rnorm(sum(pick_geno_vals < (pBB + pAB)), mean = meanAB, sd = pheno.sd)
       
-      # replace BB genos with BB distrib.
+      # replace BB genotypes with phenotypes from the BB distribution.
       phenos_sim[pick_geno_vals < pBB ] = rnorm(sum(pick_geno_vals < pBB), mean = meanBB, sd = pheno.sd)
       
-      # if NA in original cross object, should remain NA.
+      # if phenotype is NA in the original cross object, it should remain NA.
       phenos_sim[is.na(cross.obj$pheno[[pheno.name.1]])] = NA
       
-      # round for counts if required
+      # round for count data if requested
       if(round){
         phenos_sim = round(phenos_sim, 0)
       }
@@ -245,11 +231,12 @@ for(afactor in effect.list){
     }
     
     if(pheno.sd < 0){
+      # effect size was too large to simulate while maintaining the total variance from the original experiment.
       phenos_sim = rep(NA, ninds)
       
     }
     
-    
+    # Add the results of the simulation to the dataframe.
     simphenos[[paste0('sim',i)]] = phenos_sim
     
   }
@@ -275,48 +262,54 @@ for(afactor in effect.list){
 
 all.sim.peaks$chr <- chr.1
 
+##### SUMMARIZE AND SAVE OUTPUT #####
+
+# Save raw simulation output
 if(save.all.sims){
   write.csv(all.sim.peaks,file = paste0(save.path,'_all_sims.csv'), row.names = F)
 }
 
+# Select only simulations that were close to the given LOD score, across all effect sizes.
 sims.in.window = droplevels(subset(all.sim.peaks,(lod <= LOD.1 + lod.window) & (lod >= LOD.1 - lod.window)))
-counts.in.window <- data.frame(count(sims.in.window,sim.a,sim.d))
-counts.in.window$prob <- counts.in.window$n/sum(counts.in.window$n)
-counts.in.window$trait <- pheno.name.1
-counts.in.window$sims.per.effect.size <- nsim
-counts.in.window$min.sim.effect.a <- min.effect * orig.a
-counts.in.window$max.sim.effect.a <- max.effect * orig.a
-counts.in.window$orig.effect.a <- orig.a
-counts.in.window$orig.effect.d <- orig.d
-counts.in.window$dom.model <- dom.model
-counts.in.window$cross.path <- cross.path
-counts.in.window$orig.peak.marker <- marker.pos.1
-counts.in.window$orig.peak.marker.name <- marker.name.1
-counts.in.window$model <- model.1
-counts.in.window$method <- method.1
-counts.in.window$chromosome <- chr.1
-counts.in.window$lower.bayes <- lower.bayes.1
-counts.in.window$upper.bayes <- upper.bayes.1
-counts.in.window$lod.1 <- LOD.1
-counts.in.window$lod.window <- lod.window
+
+# Collect and save summary output:
+output.data <- data.frame(count(sims.in.window,sim.a,sim.d))
+output.data$prob <- output.data$n/sum(output.data$n)
+output.data$trait <- pheno.name.1
+output.data$sims.per.effect.size <- nsim
+output.data$min.sim.effect.a <- min.effect * orig.a
+output.data$max.sim.effect.a <- max.effect * orig.a
+output.data$orig.effect.a <- orig.a
+output.data$orig.effect.d <- orig.d
+output.data$dom.model <- dom.model
+output.data$cross.path <- cross.path
+output.data$orig.peak.marker <- marker.pos.1
+output.data$orig.peak.marker.name <- marker.name.1
+output.data$model <- model.1
+output.data$method <- method.1
+output.data$chromosome <- chr.1
+output.data$lower.bayes <- lower.bayes.1
+output.data$upper.bayes <- upper.bayes.1
+output.data$lod.1 <- LOD.1
+output.data$lod.window <- lod.window
 if(total.var.constant){
-  counts.in.window$constant_variance = 'total_variance_constant'
+  output.data$constant_variance = 'total_variance_constant'
 }
 if(!(total.var.constant)){
-  counts.in.window$constant_variance = 'per_genotype_variance_constant'
+  output.data$constant_variance = 'per_genotype_variance_constant'
 }
 
-write.csv(counts.in.window,file = paste0(save.path,'_prob_distrib.csv'), row.names=F)
+write.csv(output.data,file = paste0(save.path,'_prob_distrib.csv'), row.names=F)
 
-# flag possible issues with sims:
-if(sum(counts.in.window$sim.a == counts.in.window$min.sim.effect.a)>0 & !min.effect==0){
-  print('Possible issue: minimum simulated effect size is in the final distribution, but it is not zero. The simulated LOD distribution may be artificially truncated; consider expanding the range of simulated effect sizes downwards.')
+# flag possible issues with simulations:
+if(sum(output.data$sim.a == output.data$min.sim.effect.a)>0 & !min.effect==0){
+  print('Possible issue: minimum simulated effect size is in the final distribution, but it is not zero. \
+        The simulated probability distribution may be artificially truncated; consider expanding the range of \
+        simulated effect sizes downwards.')
 }
-if(sum(counts.in.window$sim.a == counts.in.window$max.sim.effect.a)>0){
-  print('Possible issue: maximum simulated effect size is in the final distribution. The simulated LOD distribution may be artificially truncated; consider expanding the range of simulated effect sizes upwards.')
+if(sum(output.data$sim.a == output.data$max.sim.effect.a)>0){
+  print('Possible issue: maximum simulated effect size is in the final distribution. \
+        The simulated probability distribution may be artificially truncated; consider expanding the range of \
+        simulated effect sizes upwards.')
 }
 
-
-# Note: to visualize the output:
-# ggplot(all.sim.peaks,aes(x=lod,fill=sim.a))+geom_histogram() + theme_classic() + geom_vline(xintercept = LOD.1) + geom_rect(xmin = LOD.1-lod.window, xmax = LOD.1 + lod.window, ymin = -Inf, ymax = Inf, alpha = 0.01, fill = 'black')+facet_grid(sim.a~.)
-# ggplot(counts.in.window,aes(x=sim.a,y=prob))+geom_bar(stat='identity')+theme_classic()+geom_vline(aes(xintercept = orig.effect.a))
