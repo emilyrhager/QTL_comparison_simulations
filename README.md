@@ -81,3 +81,7 @@ The second (suffix _prob_distrib.csv for step 1 and _summary_sims.csv for step 2
 
 The final step is to combine the information from these two files to calculate the final output probabilities, as shown in gather_QTL_comparison_output_example.R.
 
+# Author
+Emily R. Hager, 2020
+Hoekstra lab
+Harvard University
