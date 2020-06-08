@@ -20,8 +20,7 @@ parser <- ArgumentParser()
 # Required
 parser$add_argument("-o", "--cross_object", 
                     help=paste("Path to rqtl cross object to use for simulations (saved as .rds).",
-                               "Genotype probabilities must already be present. If not, run calc.genoprob first.",
-                               "Note: marker names are assumed in bp (e.g. chr15_1234, chr15:1234)"), 
+                               "Genotype probabilities must already be present. If not, run calc.genoprob first."), 
                     required = T)
 
 parser$add_argument("-c", "--chromosome", 
