@@ -8,7 +8,7 @@ One challenge for comparing QTL maps (e.g., maps for the same trait in two popul
 
 This means that if we detect a QTL for some trait in one experiment, but not in another, it is not trivial to assess whether that result is likely because a true, shared associated locus was missed in one of the experiments, or instead whether the causal locus is in fact not shared.
 
-These scripts implement simulations to provide a quantitative estimate of the probability of obtaining given QTL mapping results if the causal locus were shared with similar effect size in two experiments. Each step can be run from the command line, given two cross objects in the format output by Karl Broman's ![R/qtl package](https://rqtl.org/). 
+These scripts implement simulations to provide a quantitative estimate of the probability of obtaining given QTL mapping results if the causal locus were shared with similar effect size in two experiments. Each step can be run from the command line, given two cross objects in the format output by Karl Broman's [R/qtl package](https://rqtl.org/). 
 
 ### Approach
 
