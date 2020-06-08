@@ -2,13 +2,13 @@
 
 ### Purpose
 
-QTL mapping experiments identify regions of the genome where ancestry is associated with variation in some particular trait of interest, usually in a lab-generated hybrid population. 
+Quantitative trait locus (QTL) mapping experiments identify regions of the genome where ancestry is associated with variation in some particular trait of interest, usually in a lab-generated hybrid population. 
 
-One challenge for comparing QTL maps (e.g. maps for the same trait in two populations, or for two traits in the same population) is that for typical effect sizes and sample sizes, causative loci can often be missed due to sampling error, and in addition, effect sizes are likely to be overestimated for loci that do pass genome-wide significance thresholds. 
+One challenge for comparing QTL maps (e.g., maps for the same trait in two populations, or for two traits in the same population) is that for typical effect sizes and sample sizes, causative loci can often be missed due to sampling error, and in addition, effect sizes are likely to be overestimated for loci that do pass genome-wide significance thresholds. 
 
 This means that if we detect a QTL for some trait in one experiment, but not in another, it is not trivial to assess whether that result is likely because a true, shared associated locus was missed in one of the experiments, or instead whether the causal locus is in fact not shared.
 
-These scripts implement simulations to provide a quantitative estimate of the probability of obtaining given QTL mapping results if the causal locus were shared with similar effect size in two experiments. Each step can be run from the command line, given two cross objects in the format output by Karl Broman's rqtl package. 
+These scripts implement simulations to provide a quantitative estimate of the probability of obtaining given QTL mapping results if the causal locus were shared with similar effect size in two experiments. Each step can be run from the command line, given two cross objects in the format output by Karl Broman's ![R/qtl package](https://rqtl.org/). 
 
 ### Approach
 
@@ -30,11 +30,11 @@ The two distributions ![equation](https://latex.codecogs.com/svg.latex?P%28%20l_
 
 
 ### Running the simulations
-The first step in running the simulations is to approximate ![equation](https://latex.codecogs.com/svg.latex?P%28E%20%3D%20e%20%5Cmid%20l_1%20%3D%20L_1%20%29) in experiment 1 (the experiment in which the QTL of interest was detected). This is done using the file **simulate_effect_size_distrib_given_LOD.R**. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
+The first step in running the simulations is to approximate ![equation](https://latex.codecogs.com/svg.latex?P%28E%20%3D%20e%20%5Cmid%20l_1%20%3D%20L_1%20%29) in experiment 1 (the experiment in which the QTL of interest was detected). This is done using the file **step1_simulate_effect_size_distrib_given_LOD.R**. This script can be run from the command line; in practice I submit to the computing cluster using job submission scripts. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
 
-The second step is to approximate ![equation](https://latex.codecogs.com/svg.latex?P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20E%20%3D%20e%29) for each effect size that could have generated the LOD score in experiment 1. This is done using the file **simulate_LOD_distrib_given_effect_size.R**. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
+The second step is to approximate ![equation](https://latex.codecogs.com/svg.latex?P%28%20l_2%20%5Cle%20L_2%20%5Cmid%20E%20%3D%20e%29) for each effect size that could have generated the LOD score in experiment 1. This is done using the file **step2_simulate_LOD_distrib_given_effect_size.R**. This script can be run from the command line; in practice I submit to the computing cluster using job submission scripts. An example job submission script and a template for submission scripts for similar jobs are located in the job_files subfolder. 
 
-The third step is to combine these distributions; because the file names and desired output may depend somewhat on the particular details of the experiment, this is done interactively; an example is shown in the file **gather_QTL_comparison_output_example.R**. 
+The third step is to combine these distributions; because the file names and desired output may depend somewhat on the particular details of the experiment, this is done interactively; an example is shown in the file **step3_example_gather_QTL_comparison.R**. 
 
 ### Required packages
 To run these scripts, you will need the following packages installed:
@@ -53,10 +53,10 @@ The scripts are designed to be run such that the simulations for each QTL peak r
 **For step 1**, required inputs are:  
 -- the cross object for experiment 1 (must have genotype probabilities already calculated, via qtl::calc.genoprob or some other method)  
 -- the chromosome where the detected QTL is located (note: X chromosome not supported; assumes just one QTL per chromosome at this point.)  
--- the name of the phenotype (i.e. name of the column in cross_object$pheno)  
+-- the name of the phenotype (i.e., name of the column in cross_object$pheno)  
 -- the folder to save output (should be a separate folder for each QTL peak)  
 
-The default options run 100 simulations per effect size, for 5 effect sizes between 0 and 2.5x the effect size detected in the original experiment, and count LOD scores that fall within +/- 1 of the experimentally determined LOD score. These defaults are designed for ease of testing locally; in practice I use 5000 simulations per effect size for 25 effect sizes in the same range, and count LOD scores that fall within +/- 0.1 of the original LOD score. The default assumes the locus is purely additive; this can be changed to either take the dominance ratio from the experiment or to set d/a to a specific value (e.g. 1 for a purely dominant locus).
+The default options run 100 simulations per effect size, for 5 effect sizes between 0 and 2.5x the effect size detected in the original experiment, and count LOD scores that fall within +/- 1 of the experimentally determined LOD score. These defaults are designed for ease of testing locally; in practice I use 5000 simulations per effect size for 25 effect sizes in the same range, and count LOD scores that fall within +/- 0.1 of the original LOD score. The default assumes the locus is completely additive; this can be changed to either take the dominance ratio from the experiment or to set d/a to a specific value (e.g., 1 for a completely dominant locus).
 
 Other defaults that may be adjusted include:  
 -setting the per-genotype variance to the total variance in the phenotype in the hybrid population; this can be changed so that the per-genotype variance varies with effect size to maintain total variance in the hybrids instead;  
@@ -64,20 +64,20 @@ Other defaults that may be adjusted include:
 
 **For step 2**, the required inputs are:  
 -- the cross object for experiment 2 (must have genotype probabilities already calculated, via qtl::calc.genoprob or some other method)  
--- the name of the phenotype in experiment 2 (i.e. name of the column in cross_object$pheno)  
+-- the name of the phenotype in experiment 2 (i.e., name of the column in cross_object$pheno)  
 -- the folder to save output (should be the output folder used in step 1)  
 
 The default options for the most part draw the parameters for the simulations to match the output from step 1. One exception is that to identify the correct input file, the default for step 2 is to assume the per-genotype variance was constant; this parameter must be changed for simulations where total variance was held constant instead. Similarly, the dominance ratio can be set if needed to distinguish among different runs of step_1 when choosing the input file. 
 
-The default setting assumes the effect size in experiment 2 is equal to that in experiment 1; to perform a sensitivity analysis to see how the results vary if this assumption is relaxed, \--effect_ratio can be set to any value (e.g. setting effect_ratio to 0.5 will perform the simulations with the effect of the locus in experiment 2 equal to half that from experiment 1).
+The default setting assumes the effect size in experiment 2 is equal to that in experiment 1; to perform a sensitivity analysis to see how the results vary if this assumption is relaxed, \--effect_ratio can be set to any value (e.g., setting effect_ratio to 0.5 will perform the simulations with the effect of the locus in experiment 2 equal to half that from experiment 1).
 
 Additional options can be specified; use Rscript <filename.R> --help to see the documentation for these. 
 
 ### Outputs
 
-Each step outputs two csv files. The first (suffix _all_sims.csv) contains the results from each individual simulation run (e.g. the peak marker and LOD scores); to save space, the \--lose_sims flag can be set to prevent saving this file. 
+Each step outputs two csv files. The first (suffix _all_sims.csv) contains the results from each individual simulation run (e.g., the peak marker and LOD scores); to save space, the \--lose_sims flag can be set to prevent saving this file. 
 
 The second (suffix _prob_distrib.csv for step 1 and _summary_sims.csv for step 2) contains summary information about the settings that were used to run the simulations and the output for each effect size e. 
 
-The final step is to combine the information from these two files to calculate the final output probabilities, as shown in gather_QTL_comparison_output_example.R.
+The final step is to combine the information from these two files to calculate the final output probabilities, as shown in step3_example_gather_QTL_comparison.R.
 

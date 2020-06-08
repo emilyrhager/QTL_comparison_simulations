@@ -1,4 +1,14 @@
 ### Functions for QTL simulations.
+#
+# Author: Emily R. Hager, 2020
+#
+# Functions used in step1_simulate_effect_size_distrib_given_LOD.R
+# and step2_simulate_LOD_distrib_given_effect_size.R.
+#
+# Function merge_step1_step2_output combines the two simulation steps
+# and calculates the final probability values. 
+#
+
 
 
 get_genotype_probabilities_at_marker<- function(cross.obj, chr.name, marker.name, geno.class){
@@ -77,10 +87,3 @@ merge_step1_step2_output <- function(step1df, step2df){
   return(sdf)
 }
 
-
-# Note: to visualize the output:
-
-# ggplot(all.sim.peaks)+geom_histogram(aes(x=pos.bayesint,fill='max_bayesint'),alpha = 0.2)+geom_histogram(aes(x=pos,fill='max_chr'),alpha = 0.2)+geom_vline(xintercept = c(marker.left,marker.right))+theme_classic()+geom_rug(aes(x=pos),data=out)
-# ggplot(all.sim.peaks,aes(x=lod))+geom_point(aes(y=lod.right,color='right'),alpha = 0.2)+geom_point(aes(y=lod.left,color='left'),alpha = 0.2)+geom_point(aes(y=lod.bayesint,color='in_bayes'),alpha = 0.2)+geom_abline(slope=1,intercept=0) + theme_classic()
-# ggplot(all.sim.peaks,aes(x=lod,fill=sim.a))+geom_histogram() + theme_classic() + geom_vline(xintercept = LOD.1) + geom_rect(xmin = LOD.1-lod.window, xmax = LOD.1 + lod.window, ymin = -Inf, ymax = Inf, alpha = 0.01, fill = 'black')+facet_grid(sim.a~.)
-# ggplot(output.data,aes(x=sim.a,y=prob))+geom_bar(stat='identity')+theme_classic()+geom_vline(aes(xintercept = orig.effect.a))
