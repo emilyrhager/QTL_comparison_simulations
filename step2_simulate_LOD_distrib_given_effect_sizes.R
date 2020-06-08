@@ -26,20 +26,51 @@ source('simulation_functions.R')
 parser <- ArgumentParser()
 
 # Required
-parser$add_argument("-o", "--cross_object", help="Path to rqtl cross object (saved as .rds) to use for simulations. Genotype probabilities required; if these do not exist, run calc.genoprob first.", required = T)
-parser$add_argument("-p","--phenotype", help = "Phenotype to test (must match name of the cross object pheno column)", required = T)
-parser$add_argument("-f", "--folder", help = "Path to folder to put output files", required = T)
+parser$add_argument("-o", "--cross_object", 
+                    help=paste("Path to rqtl cross object (saved as .rds) to use for simulations. Genotype probabilities required; ",
+                    "if these do not exist, run calc.genoprob first."), 
+                    required = T)
+
+parser$add_argument("-p","--phenotype", 
+                    help = "Phenotype to test (must match name of the cross object pheno column)", 
+                    required = T)
+
+parser$add_argument("-f", "--folder", 
+                    help = "Path to folder to put output files", 
+                    required = T)
 
 # Optional
-parser$add_argument("-e", "--effect_ratio", default = 1.0, help = "Ratio of effect size in original cross to effect size in this cross. default %(default)s.")
-parser$add_argument("--file_header", help = "First part of the output file names. Default is: 'sims_{phenotype}_effect_ratio_{effect_ratio}_'")
-parser$add_argument("--geno_reversed", action = "store_true", help = "Use this flag if you wish to flip the effect direction between the two crosses - in other words, if allele A in cross 1 was named allele B in cross 2.")
-parser$add_argument("--sim_file", help = "optional path to the file to use for the simulations of effect sizes from cross 1. Default is to take the first file in the output folder that is named sims*prob_distrib.csv")
-parser$add_argument("--lose_sims", action = "store_true", help = "Do not save the output of all simulations, just save the resulting probability distribution file. Default is to save all simulations but this file can be large.")
-parser$add_argument("--round", action = "store_true", help = "Round simulated data to the nearest integer. This is for simulating count data as a rounded normal distribution - use with care!")
-parser$add_argument("-d", "--dom_model", help = "Dominance model to use; if not specified will assume there is only one sims file in the folder")
-parser$add_argument("-v", "--total_variance_constant", action = 'store_true', help = "Hold total variance constant; default is to hold per-genotype variance constant.")
-parser$add_argument("-i", "--identical_cross_object", action = 'store_true', help = "Cross object is identical to the one in step 1 - use original peak marker name.")
+parser$add_argument("-e", "--effect_ratio", default = 1.0, 
+                    help = "Ratio of effect size in original cross to effect size in this cross. default %(default)s.")
+
+parser$add_argument("--file_header", 
+                    help = "First part of the output file names. Default is: 'sims_{phenotype}_effect_ratio_{effect_ratio}_'")
+
+parser$add_argument("--geno_reversed", action = "store_true", 
+                    help = paste("Use this flag if you wish to flip the effect direction between the two crosses - ",
+                    "in other words, if allele A in cross 1 was named allele B in cross 2."))
+
+parser$add_argument("--sim_file", 
+                    help = paste("optional path to the file to use for the simulations of effect sizes from cross 1. ",
+                    "Default is to take the first file in the output folder that is named sims*prob_distrib.csv"))
+
+parser$add_argument("--lose_sims", action = "store_true", 
+                    help = paste("Do not save the output of all simulations, just save the resulting probability distribution file. ",
+                    "Default is to save all simulations but this file can be large."))
+
+parser$add_argument("--round", action = "store_true", 
+                    help = paste("Round simulated data to the nearest integer. This is for simulating count data as a rounded normal distribution",
+                    "- use with care!"))
+
+parser$add_argument("-d", "--dom_model", 
+                    help = "Dominance model to use; if not specified will assume there is only one sims file in the folder")
+
+parser$add_argument("-v", "--total_variance_constant", action = 'store_true', 
+                    help = "Hold total variance constant; default is to hold per-genotype variance constant.")
+
+parser$add_argument("-i", "--identical_cross_object", action = 'store_true', 
+                    help = "Cross object is identical to the one in step 1 - use original peak marker name.")
+
 args <- parser$parse_args()
 
 # Required

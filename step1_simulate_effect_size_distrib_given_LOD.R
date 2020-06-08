@@ -18,28 +18,75 @@ source('simulation_functions.R')
 parser <- ArgumentParser()
 
 # Required
-parser$add_argument("-o", "--cross_object", help="Path to rqtl cross object to use for simulations (saved as .rds). Genotype probabilities must already be present. If not, run calc.genoprob first. Note: marker names are assumed in bp (e.g. chr15_1234, chr15:1234)", required = T)
-parser$add_argument("-c", "--chromosome", help="Chromosome with the locus of interest. Note: X chromosome not currently supported.", required = T)
-parser$add_argument("-p","--phenotype", help = "Phenotype to test (must match name of the cross object pheno column", required = T)
-parser$add_argument("-f", "--folder", help = "Path to folder to put output files", required = T)
+parser$add_argument("-o", "--cross_object", 
+                    help=paste("Path to rqtl cross object to use for simulations (saved as .rds).",
+                               "Genotype probabilities must already be present. If not, run calc.genoprob first.",
+                               "Note: marker names are assumed in bp (e.g. chr15_1234, chr15:1234)"), 
+                    required = T)
+
+parser$add_argument("-c", "--chromosome", 
+                    help="Chromosome with the locus of interest. Note: X chromosome not currently supported.", 
+                    required = T)
+
+parser$add_argument("-p","--phenotype", 
+                    help = "Phenotype to test (must match name of the cross object pheno column", 
+                    required = T)
+
+parser$add_argument("-f", "--folder", 
+                    help = "Path to folder to put output files", 
+                    required = T)
 
 # Optional
-parser$add_argument("-n", "--nsim", default = 100, help = "Number of simulations per effect size; default %(default)s.",
+parser$add_argument("-n", "--nsim", default = 100, 
+                    help = "Number of simulations per effect size; default %(default)s.",
                     type = "integer")
-parser$add_argument("-e", "--neffect", default = 5, help = "Number of effect sizes to test; default %(default)s.",
+
+parser$add_argument("-e", "--neffect", default = 5, 
+                    help = "Number of effect sizes to test; default %(default)s.",
                     type = "integer")
-parser$add_argument("--min_effect", default = 0.0, help = "Smallest effect size to test, as a function of the detected QTL effect size (i.e., --min.effect 0.5 will set the minimum effect size to 0.5 times the detected effect; default %(default)s")
-parser$add_argument("--max_effect", default = 2.5, help = c("Largest effect size to test, as a function of the detected QTL effect size",
+
+parser$add_argument("--min_effect", default = 0.0, 
+                    help = paste("Smallest effect size to test, as a function of the detected QTL effect size",
+                    "(i.e., --min.effect 0.5 will set the minimum effect size to 0.5 times the detected effect; default %(default)s"))
+
+parser$add_argument("--max_effect", default = 2.5, 
+                    help = paste("Largest effect size to test, as a function of the detected QTL effect size",
                     "(i.e., --max.effect 2 will set the minimum effect size to 2 times the detected effect; default %(default)s"))
-parser$add_argument("-d", "--dom_model", default = 'additive', help = "Dominance model to use for sims. Options are: (1) (default) 'additive': sims use additive effects only; (2) 'experiment': sims use the d:a ratio detected in the original map for all effect sizes; or (3) a number: the number specified here will be taken as the ratio of d to a.")
-parser$add_argument("-w", "--lod_window", default = 1.0, help = "The half-width of the window around the detected lod score that will be used to generate the probability distribution. For example, -w 1 (the default) gives the probability distribution of effect sizes that would generate a lod score within +/- 1 of the detected score",
+
+parser$add_argument("-d", "--dom_model", 
+                    default = 'additive', 
+                    help = paste("Dominance model to use for sims. Options are: ",
+                    "(1) (default) 'additive': sims use additive effects only; ",
+                    "(2) 'experiment': sims use the d:a ratio detected in the original map for all effect sizes; or ",
+                    "(3) a number: the number specified here will be taken as the ratio of d to a."))
+
+parser$add_argument("-w", "--lod_window", default = 1.0, 
+                    help = paste("The half-width of the window around the detected lod score that will be used to generate",
+                    "the probability distribution. For example, -w 1 (the default) gives the probability distribution of ",
+                    "effect sizes that would generate a lod score within +/- 1 of the detected score"),
                     type = 'double')
-parser$add_argument("-m", "--method", default = 'ehk', help = "Method for QTL mapping; default ehk")
-parser$add_argument("--model", default = 'normal', help = "Model to use for QTL mapping; default normal. CAREFUL: data for sims generated from random normal distribution regardless, so modify with care.")
-parser$add_argument("--file_header", help = "First part of the output file names. Default is: 'sims_{phenotype}_dom_{dominance model}_window_{lod window}_'")
-parser$add_argument("--lose_sims", action = "store_true", help = "Do not save the output of all simulations, just save the resulting probability distribution file. Default is to save all simulations but this file can be large.")
-parser$add_argument("--round", action = "store_true", help = "Round simulated data to the nearest integer. This is for simulating count data as a rounded normal distribution - use with care!")
-parser$add_argument("--total_variance_constant", "-v", action = "store_true", help = "Hold total variance constant; thus the per-genotype variance shrinks with increasing effect size. Default is to hold per-genotype variance constant.")
+
+parser$add_argument("-m", "--method", default = 'ehk', 
+                    help = "Method for QTL mapping; default ehk")
+
+parser$add_argument("--model", default = 'normal', 
+                    help = paste("Model to use for QTL mapping; default normal. ",
+                    "CAREFUL: data for sims generated from random normal distribution regardless, so modify with care."))
+
+parser$add_argument("--file_header", 
+                    help = "First part of the output file names. Default is: 'sims_{phenotype}_dom_{dominance model}_window_{lod window}_'")
+
+parser$add_argument("--lose_sims", action = "store_true", 
+                    help = paste("Do not save the output of all simulations, just save the resulting probability distribution file. ",
+                    "Default is to save all simulations but this file can be large."))
+
+parser$add_argument("--round", action = "store_true", 
+                    help = paste("Round simulated data to the nearest integer. This is for simulating count data as a rounded normal ",
+                    "distribution - use with care!"))
+
+parser$add_argument("--total_variance_constant", "-v", action = "store_true", 
+                    help = paste("Hold total variance constant; thus the per-genotype variance shrinks with increasing effect size.",
+                    "Default is to hold per-genotype variance constant."))
 
 args <- parser$parse_args()
 
