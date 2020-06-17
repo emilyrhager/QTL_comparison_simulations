@@ -46,11 +46,13 @@ parser$add_argument("-e", "--neffect", default = 5,
 
 parser$add_argument("--min_effect", default = 0.0, 
                     help = paste("Smallest effect size to test, as a function of the detected QTL effect size",
-                    "(i.e., --min.effect 0.5 will set the minimum effect size to 0.5 times the detected effect; default %(default)s"))
+                    "(i.e., --min.effect 0.5 will set the minimum effect size to 0.5 times the detected effect; default %(default)s"),
+                    type = "double")
 
 parser$add_argument("--max_effect", default = 2.5, 
                     help = paste("Largest effect size to test, as a function of the detected QTL effect size",
-                    "(i.e., --max.effect 2 will set the minimum effect size to 2 times the detected effect; default %(default)s"))
+                    "(i.e., --max.effect 2 will set the minimum effect size to 2 times the detected effect; default %(default)s"),
+                    type = "double")
 
 parser$add_argument("-d", "--dom_model", 
                     default = 'additive', 

@@ -41,7 +41,8 @@ parser$add_argument("-f", "--folder",
 
 # Optional
 parser$add_argument("-e", "--effect_ratio", default = 1.0, 
-                    help = "Ratio of effect size in original cross to effect size in this cross. default %(default)s.")
+                    help = "Ratio of effect size in original cross to effect size in this cross. default %(default)s.",
+                    type = 'double')
 
 parser$add_argument("--file_header", 
                     help = "First part of the output file names. Default is: 'sims_{phenotype}_effect_ratio_{effect_ratio}_'")
